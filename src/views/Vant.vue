@@ -2,10 +2,11 @@
   <!-- 玩家信息 -->
   <div class="container mx-auto px-4 font-mono relative min-h-screen">
     <div class="sticky top-0 grid grid-cols-2 gap-4 mt-5">
-      <el-button type="success" size="small" @click="$router.push('/vant')">去vant</el-button>
-      <el-button type="danger" size="small" @click="initForm()">初始化</el-button>
+      <van-button type="primary" size="small" @click="$router.push('/')">去home</van-button>
+      <van-button type="success" size="small" @click="openInitForm()">初始化</van-button>
     </div>
     <div class="text-gray-900 leading-tight mt-8">玩家信息</div>
+
     <div v-for="(item, index) in list" :key="item.name">
       <div class="grid md:grid-cols-4 grid-cols-3 gap-1 mt-4">
         <div class="name">{{ item.name }} :</div>
@@ -15,80 +16,83 @@
         <div class="col-span-1 text-left">{{ numFormat(item.money) }}</div>
       </div>
       <div class="grid md:grid-cols-4 grid-cols-4 gap-4 mt-4">
-        <el-button
-          size="small"
+        <van-button
           @click="unitOperation('add', form.unit, index)"
-        >{{ '+' + form.unit }}</el-button>
-        <el-button
           size="small"
+        >{{ '+' + form.unit }}</van-button>
+
+        <van-button
           @click="unitOperation('sub', form.unit, index)"
-        >{{ '-' + form.unit }}</el-button>
-        <el-button type="success" size="small" @click="handle('add', index)">获得</el-button>
-        <el-button type="danger" size="small" @click="handle('sub', index)">失去</el-button>
+          size="small"
+        >{{ '-' + form.unit }}</van-button>
+        <van-button type="primary" size="small" @click="handle('add', index)">获得</van-button>
+        <van-button type="warning" size="small" @click="handle('sub', index)">失去</van-button>
       </div>
     </div>
-    <div class="mt-10"></div>
   </div>
-  <!-- 初始信息填写 -->
-  <el-dialog
-    title="初始信息填写"
-    v-model="dialogFormVisible"
-    width="95%"
-    :close-on-click-modal="false"
-    :close-on-press-escape="false"
-    :show-close="false"
-  >
-    <el-form ref="elForm" :rules="rules" :model="form">
-      <el-form-item label="设置人数" :label-width="formLabelWidth" prop="personNum">
-        <el-input-number v-model="form.personNum" :precision="0" :step="1" :min="1"></el-input-number>
-      </el-form-item>
-      <el-form-item label="初始金额" :label-width="formLabelWidth" prop="moneyNum">
-        <el-input-number v-model="form.moneyNum" :precision="0" :step="1" :min="1"></el-input-number>
-      </el-form-item>
-      <el-form-item label="最小金额单位" :label-width="formLabelWidth" prop="unit">
-        <el-input v-model="form.unit" autocomplete="off" clearable style="width: 180px"></el-input>
-      </el-form-item>
-    </el-form>
-    <template #footer class="dialog-footer">
-      <div class="grid grid-cols-2 gap-5">
-        <el-button type="default" @click="closeInitForm()">取消</el-button>
-        <el-button type="primary" @click="submit()">确 定</el-button>
-      </div>
-    </template>
-  </el-dialog>
   <!-- 金额操作 -->
-  <el-dialog :title="title" v-model="changeMoneVisible" width="95%">
-    <el-form ref="moneyForm" :rules="rules" :model="moneyForm">
-      <el-form-item label="金额" :label-width="formLabelWidth" prop="moneyNum">
-        <el-input-number
+  <van-dialog
+    v-model:show="changeMoneVisible"
+    :title="handTitle"
+    show-cancel-button
+    @confirm="okMethods"
+  >
+    <div class="mt-8"></div>
+    <van-field name="personNum" label="金额">
+      <template #input>
+        <van-stepper
           v-model="moneyForm.moneyNum"
-          :precision="0"
-          :step="form.unit || 1"
-          :min="0"
-        ></el-input-number>
-        <div>{{ kFormat(moneyForm.moneyNum) }}</div>
-        <div>{{ number_chinese(moneyForm.moneyNum) }}</div>
-      </el-form-item>
-
-      <div class="grid grid-cols-2 gap-4 grid-box">
-        <el-button size="small" @click="moneyNumOperation('add', form.unit)">{{ form.unit }}</el-button>
-        <el-button size="small" @click="moneyNumOperation('add', 500)">{{ 500 }}</el-button>
-        <el-button size="small" @click="moneyNumOperation('add', 10000)">{{ '10k' }}</el-button>
-        <el-button size="small" @click="moneyNumOperation('add', 100000)">{{ '100k' }}</el-button>
-        <el-button size="small" @click="moneyNumOperation('add', 1000000)">{{ '1M' }}</el-button>
-        <el-button size="small" @click="clearCurrenyMoney()">清空</el-button>
-      </div>
-    </el-form>
-    <template #footer class="dialog-footer">
-      <div class="grid grid-cols-2 gap-5">
-        <el-button @click="cancleMethods()">取 消</el-button>
-        <el-button type="primary" @click="okMethods()">确 定</el-button>
-      </div>
-    </template>
-  </el-dialog>
+          :step="form.unit || 0"
+          min="0"
+          input-width="80px"
+          integer
+        />
+      </template>
+    </van-field>
+    <van-cell center title="千分位数字" :value="kFormat(moneyForm.moneyNum)" />
+    <van-cell center title="大写数字" :value="number_chinese(moneyForm.moneyNum)" />
+    <div class="grid grid-cols-2 gap-4 grid-box mt-8 mb-8 ml-3 mr-3">
+      <van-button size="small" @click="moneyNumOperation('add', form.unit)">{{ form.unit }}</van-button>
+      <van-button size="small" @click="moneyNumOperation('add', 500)">{{ 500 }}</van-button>
+      <van-button size="small" @click="moneyNumOperation('add', 10000)">{{ '10k' }}</van-button>
+      <van-button size="small" @click="moneyNumOperation('add', 100000)">{{ '100k' }}</van-button>
+      <van-button size="small" @click="moneyNumOperation('add', 1000000)">{{ '1M' }}</van-button>
+      <van-button type="danger" size="small" @click="clearCurrenyMoney()">清空</van-button>
+    </div>
+  </van-dialog>
+  <!-- 初始信息填写 -->
+  <van-dialog
+    v-model:show="dialogFormVisible"
+    title="初始信息填写"
+    show-cancel-button
+    @open="initFormData"
+    @confirm="submitInitForm"
+  >
+    <div class="mt-8"></div>
+    <van-field name="personNum" label="设置人数">
+      <template #input>
+        <van-stepper v-model="initForm.personNum" :step="1" min="2" input-width="80px" integer />
+      </template>
+    </van-field>
+    <van-field name="moneyNum" label="初始金额">
+      <template #input>
+        <van-stepper v-model="initForm.moneyNum" :step="1" input-width="80px" integer />
+      </template>
+    </van-field>
+    <van-field name="moneyNum" label="最小金额单位">
+      <template #input>
+        <van-stepper v-model="initForm.unit" :step="1" input-width="80px" integer />
+      </template>
+    </van-field>
+  </van-dialog>
 </template>
 
 <script>
+const initData = {
+  personNum: 4, //人数
+  moneyNum: 100000, //初始金钱
+  unit: 1000,
+}
 export default {
   data() {
     return {
@@ -96,9 +100,10 @@ export default {
       input: '',
       dialogFormVisible: false,
       form: {
-        personNum: 4, //人数
-        moneyNum: 100000, //初始金钱
-        unit: 1000,
+        ...initData
+      },
+      initForm: {
+        ...initData
       },
       rules: {
         moneyNum: [{
@@ -118,7 +123,6 @@ export default {
         }],
       },
       formLabelWidth: '110px',
-      title: '获得金额',
       changeMoneVisible: false,
       moneyForm: {
         moneyNum: 0
@@ -130,6 +134,9 @@ export default {
   computed: {
     handStr() {
       return (this.hand === 'add' ? '+' : '-')
+    },
+    handTitle() {
+      return (this.hand === 'add' ? '获得金额' : '失去金额')
     }
   },
   mounted() {
@@ -222,47 +229,53 @@ export default {
       this.title = hand === 'add' ? '获得金额' : '失去金额'
       this.changeMoneVisible = true
     },
-    initForm() {
+    openInitForm() {
       this.dialogFormVisible = true
     },
     closeInitForm() {
       this.dialogFormVisible = false
     },
-    submit() {
-      this.$refs['elForm'].validate(valid => {
-        if (!valid) return
-        var arr = []
-        if (this.form.personNum > 0) {
-          var arr = []
-          for (var i = 0; i < (+this.form.personNum); i++) {
-            arr.push({
-              name: '玩家' + (i + 1),
-              money: this.form.moneyNum,
-              unit: this.form.unit,
-            })
-          }
-        }
-        this.list = arr
-        this.dialogFormVisible = false
+    initFormData() {
+      this.initForm = JSON.parse(JSON.stringify(initData))
+    },
+    submitInitForm() {
+      this.$dialog.confirm({
+        title: '提示',
+        message: '你在初始化数据,请确认是否继续操作',
       })
+        .then(() => {
+          let arr = []
+          if (this.initForm.personNum > 0) {
+            for (let i = 0; i < (+this.initForm.personNum); i++) {
+              arr.push({
+                name: '玩家' + (i + 1),
+                money: this.initForm.moneyNum,
+                unit: this.initForm.unit,
+              })
+            }
+          }
+          this.form.unit = this.initForm.unit
+          this.list = arr
+
+        })
+        .catch(() => {
+          // on cancel
+        });
     },
     cancleMethods() {
       this.moneyForm.moneyNum = 0
       this.changeMoneVisible = false
     },
     okMethods() {
-      this.$refs['moneyForm'].validate(valid => {
-        if (!valid) return;
-        let currentMoney = this.list[this.activeIndex].money;
-        let money = this.hand === 'add' ? currentMoney + (1 * this.moneyForm.moneyNum) : currentMoney - this.moneyForm.moneyNum;
-        let obj = {
-          name: this.list[this.activeIndex].name,
-          money: money,
-          unit: this.list[this.activeIndex].unit,
-        }
-        this.list[this.activeIndex] = obj
-        this.changeMoneVisible = false
-      })
+      let currentMoney = this.list[this.activeIndex].money;
+      let money = this.hand === 'add' ? currentMoney + (1 * this.moneyForm.moneyNum) : currentMoney - this.moneyForm.moneyNum;
+      let obj = {
+        name: this.list[this.activeIndex].name,
+        money: money,
+        unit: this.list[this.activeIndex].unit,
+      }
+      this.list[this.activeIndex] = obj
+      this.changeMoneVisible = false
     },
   }
 }

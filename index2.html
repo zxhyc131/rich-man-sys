@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>demo</title>
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script src="js/vue.js"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <style>
+    .list {
+      margin-top: 100px;
+      padding-left: 10px;
+    }
+    .item {
+      overflow: hidden;
+      clear: both;
+      margin-bottom: 15px;
+    }
+    .personInfo {
+      float: left;
+      height: 32px;
+      line-height: 32px;
+      font-family: Microsoft YaHei;
+      font-size: 16px;
+      margin-right: 15px;
+    }
+    .btns {
+      float: left;
+    }
+    .name {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="list">
+      <div class="item" v-for="(item, index) in list" :key="index">
+        <div class="personInfo"><span class="name">{{item.name}} :</span> {{item.money+' '+item.unit}}</div>
+        <div class="btns">
+          <el-button icon="el-icon-plus" type="success" size="small" @click="handle('add', index)">获得</el-button>
+          <el-button icon="el-icon-minus"  type="danger" size="small" @click="handle('sub', index)">失去</el-button>
+        </div>
+      </div>
+    </div>
+    <el-dialog title="初始信息填写" :visible.sync="dialogFormVisible" width="95%"
+     :close-on-click-modal="false" :close-on-press-escape="false" :show-close="false">
+      <el-form ref="elForm" :rules="rules" :model="form">
+        <el-form-item label="设置人数" :label-width="formLabelWidth" prop="personNum">
+          <el-input-number v-model="form.personNum" :precision="0" :step='1' :min="1"></el-input-number>
+        </el-form-item>
+        <el-form-item label="初始金额" :label-width="formLabelWidth" prop="moneyNum">
+          <el-input-number v-model="form.moneyNum" :precision="0" :step='1' :min="1"></el-input-number>
+        </el-form-item>
+        <el-form-item label="最小金额单位" :label-width="formLabelWidth" prop="unit">
+          <el-input v-model="form.unit" autocomplete="off" clearable style="width: 180px"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submit()">确 定</el-button>
+      </div>
+    </el-dialog>
+    <el-dialog :title="title" :visible.sync="changeMoneVisible" width="95%">
+      <el-form ref="moneyForm" :rules="rules" :model="moneyForm">
+        <el-form-item label="金额" :label-width="formLabelWidth" prop="moneyNum">
+          <el-input-number v-model="moneyForm.moneyNum" :precision="0" :step='1' :min="1"></el-input-number>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">取 消</el-button>
+        <el-button type="primary" @click="okMethods">确 定</el-button>
+      </div>
+    </el-dialog>
+  </div>
+  <script>
+    $(document).ready(function() {
+      Vue.use(ELEMENT)
+      var vue = new Vue({
+        el:'#app',
+        data() {
+          return {
+            list: [],
+            input: '',
+            dialogFormVisible: true,
+            form: {
+              personNum: 1,
+              moneyNum: 1,
+              unit: '',
+            },
+            rules: {
+              moneyNum: [{
+                required: true,
+                message: '计数器',
+                trigger: 'blur'
+              }],
+              unit: [{
+                required: true,
+                message: '请输入单位',
+                trigger: 'blur'
+              }],
+              personNum: [{
+                required: true,
+                message: '计数器',
+                trigger: 'blur'
+              }],
+            },
+            formLabelWidth: '110px',
+            title: '获得金额',
+            changeMoneVisible: false,
+            moneyForm: {
+              moneyNum: 1
+            },
+            activeIndex: 0,
+            hand: 'add'
+          }
+        },
+        created() {
+        },
+        methods:{
+          handle: function (hand, index) {
+            this.moneyForm.moneyNum = 1
+            this.hand = hand
+            this.activeIndex = index
+            this.title = hand === 'add' ? '获得金额' : '失去金额'
+            this.changeMoneVisible = true
+          },
+          submit: function () {
+            this.$refs['elForm'].validate(valid => {
+              if (!valid) return
+              var arr = []
+              if (this.form.personNum > 0) {
+                console.log(this.form, 'this.form')
+                var arr = []
+                for (var i = 0; i < (+this.form.personNum); i++) {
+                  arr.push({
+                    name: 'name' + (i + 1),
+                    money: this.form.moneyNum,
+                    unit: this.form.unit,
+                  })
+                }
+              }
+              this.list = arr
+              this.dialogFormVisible = false
+            })
+          },
+          okMethods: function () {
+            this.$refs['moneyForm'].validate(valid => {
+              if (!valid) return
+              var currentMoney = this.list[this.activeIndex].money
+              var money = this.hand === 'add' ? currentMoney + this.moneyForm.moneyNum : currentMoney - this.moneyForm.moneyNum
+              var obj = {
+                name: this.list[this.activeIndex].name,
+                money: money,
+                unit: this.list[this.activeIndex].unit,
+              }
+              this.$set(this.list, this.activeIndex, obj)
+              this.changeMoneVisible = false
+            })
+          },
+          cancelMethods: function () {
+          }
+        }
+      })
+      console.log('$', vue)
+    })
+  </script>
+</body>
+</html>
